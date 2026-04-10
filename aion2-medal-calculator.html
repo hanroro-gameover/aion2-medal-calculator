@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>아이온2 훈장 계산기</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
+
+    :root {
+      --bg: #0d0f1a;
+      --card: #161928;
+      --card2: #1e2235;
+      --border: #2e3352;
+      --silver: #c0c8e0;
+      --silver-glow: #a0b4d8;
+      --gold: #f0c040;
+      --gold-glow: #ffdf70;
+      --platinum: #9ae8ff;
+      --platinum-glow: #c2f5ff;
+      --accent: #5b7dff;
+      --text: #e8eaf6;
+      --text-muted: #7a84a8;
+      --success: #4cde8a;
+      --danger: #ff6060;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 24px 16px 48px;
+    }
+
+    /* ── Header ── */
+    header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    header h1 {
+      font-size: 1.8rem;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, var(--silver) 0%, var(--gold) 50%, var(--platinum) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    header p {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      margin-top: 6px;
+    }
+
+    /* ── Layout ── */
+    .container {
+      max-width: 560px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px 22px;
+    }
+    .card-title {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+
+    /* ── Medal Row ── */
+    .medal-row {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .medal-field {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--card2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 14px;
+      transition: border-color 0.2s;
+    }
+    .medal-field:focus-within {
+      border-color: var(--accent);
+    }
+    .medal-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+    .medal-icon.silver { background: radial-gradient(circle at 35% 35%, #dce4f5, #8899bb); box-shadow: 0 0 8px #a0b4d860; }
+    .medal-icon.gold   { background: radial-gradient(circle at 35% 35%, #ffe980, #c89020); box-shadow: 0 0 8px #f0c04060; }
+    .medal-icon.plat   { background: radial-gradient(circle at 35% 35%, #d8f8ff, #60c8e0); box-shadow: 0 0 8px #9ae8ff60; }
+    .medal-icon img    { width: 26px; height: 26px; object-fit: contain; image-rendering: pixelated; }
+
+    .medal-label {
+      flex: 1;
+      font-size: 0.92rem;
+      font-weight: 500;
+    }
+    .medal-label small {
+      display: block;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: 1px;
+    }
+
+    .medal-input {
+      width: 90px;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font-size: 1.05rem;
+      font-weight: 700;
+      text-align: right;
+      font-family: inherit;
+    }
+    .medal-input::placeholder { color: var(--text-muted); font-weight: 400; }
+
+    /* ── Exchange Info ── */
+    .exchange-info {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .exchange-tag {
+      background: var(--card2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 5px 10px;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+    .exchange-tag span { color: var(--text); font-weight: 600; }
+
+    /* ── Target Section ── */
+    .target-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .target-select {
+      flex: 1;
+      background: var(--card2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 11px 14px;
+      color: var(--text);
+      font-size: 0.9rem;
+      font-family: inherit;
+      outline: none;
+      cursor: pointer;
+    }
+    .target-select:focus { border-color: var(--accent); }
+    .target-select option { background: var(--card); }
+
+    .target-input-wrap {
+      flex: 1;
+      background: var(--card2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 11px 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .target-input-wrap:focus-within { border-color: var(--accent); }
+    .target-input-wrap input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font-size: 1rem;
+      font-weight: 700;
+      font-family: inherit;
+      width: 0;
+    }
+    .target-input-wrap span {
+      color: var(--text-muted);
+      font-size: 0.8rem;
+    }
+
+    /* ── Result Card ── */
+    .result-card {
+      background: linear-gradient(135deg, #1a1e35 0%, #151a2e 100%);
+      border: 1px solid var(--accent);
+      border-radius: 16px;
+      padding: 22px;
+      text-align: center;
+    }
+    .result-card.hidden { display: none; }
+    .result-card.done { border-color: var(--success); }
+    .result-card.impossible { border-color: var(--danger); }
+
+    .result-weeks {
+      font-size: 3.5rem;
+      font-weight: 900;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .result-weeks.silver-c { color: var(--silver-glow); }
+    .result-weeks.gold-c   { color: var(--gold-glow); }
+    .result-weeks.plat-c   { color: var(--platinum-glow); }
+    .result-weeks.done-c   { color: var(--success); }
+    .result-weeks.danger-c { color: var(--danger); }
+
+    .result-label {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-bottom: 18px;
+    }
+
+    .result-breakdown {
+      background: var(--card2);
+      border-radius: 10px;
+      padding: 14px 16px;
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .breakdown-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.84rem;
+    }
+    .breakdown-row .bk-label { color: var(--text-muted); }
+    .breakdown-row .bk-val { font-weight: 600; }
+    .breakdown-row .bk-val.pos { color: var(--success); }
+    .breakdown-row .bk-val.neg { color: var(--danger); }
+    .breakdown-divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 2px 0;
+    }
+
+    /* ── Share Button ── */
+    .share-btn {
+      width: 100%;
+      background: linear-gradient(135deg, var(--accent) 0%, #7b5fff 100%);
+      border: none;
+      border-radius: 12px;
+      padding: 13px;
+      color: #fff;
+      font-size: 0.95rem;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .share-btn:hover { opacity: 0.9; }
+    .share-btn:active { transform: scale(0.98); }
+    .share-btn.copied { background: linear-gradient(135deg, #2cb67d, #1a8f5a); }
+
+    /* ── Toggle Switch ── */
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--card2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin-top: 14px;
+      cursor: pointer;
+      transition: border-color 0.2s;
+      user-select: none;
+    }
+    .toggle-row:hover { border-color: var(--accent); }
+    .toggle-row.active { border-color: var(--accent); background: #1c2040; }
+
+    .toggle-label {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .toggle-label strong {
+      font-size: 0.92rem;
+      font-weight: 600;
+    }
+    .toggle-label small {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .toggle-switch {
+      width: 44px;
+      height: 24px;
+      background: var(--border);
+      border-radius: 99px;
+      position: relative;
+      transition: background 0.25s;
+      flex-shrink: 0;
+    }
+    .toggle-switch::after {
+      content: '';
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      background: #fff;
+      border-radius: 50%;
+      top: 3px;
+      left: 3px;
+      transition: transform 0.25s;
+      box-shadow: 0 1px 4px #0006;
+    }
+    .toggle-row.active .toggle-switch {
+      background: var(--accent);
+    }
+    .toggle-row.active .toggle-switch::after {
+      transform: translateX(20px);
+    }
+
+    /* ── Tooltip / notice ── */
+    .notice {
+      text-align: center;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>⚔️ 아이온2 훈장 계산기</h1>
+  <p>목표 훈장까지 앞으로 몇 주? 지금 바로 계산해보세요</p>
+</header>
+
+<div class="container">
+
+  <!-- 현재 보유량 -->
+  <div class="card">
+    <div class="card-title">🎖 현재 보유 훈장</div>
+    <div class="medal-row">
+      <div class="medal-field">
+        <div class="medal-icon silver"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAABQCAYAAACOEfKtAAADn0lEQVR4nO2brXYbMRCFJz1FJSElJUUBRSYmJnmDgOKaGCSgJqZFBkalJilIQIiLC/wGJiYmRgVGJcV9AhfkaFdHq9/VjDTrMx+xk82utHfvSKNZBUAQhAFzVbsDn798O2Nc59fP71Xu5U2NRi+Jt7U70PKp53m/UXuRijgwExEwExEwExEwExEwE0azcN3ZtC/iwEwYObDL/df75vvzj+eKPXHDUkBdOPN33ISUEM6EnYA296UcLw07AYdG9XKWyXZ3Cpa37m5v2PSbnQND4nASD4ChgEODZRoDADCfTTu/e3zZVOiJH1bhoMY/m3iKx5cNqzBm05Ht7nT2CaejnMhByOodiHGdCw5urNp4iutc1HZjlUZzXOeilhuLN4jhOhc1RCzaGKV4itIhXaQRW8iu1k/N9+XiwXnuav0UPG67Tik3kjdguk6/YRNdAPV3y8UUVuuN87jvOiXcSLYSyZkoXl3Xnqe+r9YbrxtNVNvb3elMJSLJRV1jnc81Orp43WvELedMoanciFpM2O5O59yJwidezHEX89kU5rNpVLkshV4hrHdCPdESMywGSkTdibb7iSXZzq4nGCuef/CPfwC+UI4ZJ32VnRQRk0IY2/418T3wlPtkUQ/0OW9/OMJkPHKeYzoxZZbGoKiAZnoSYn84wp+//5wiAnTFT011ckEZA0Pjn54Ux6LE+/jhuvl0idhtr5t423CNg2RjYOrFAVrX9RUPABoR94dj1PmqvZi807yf1PvrFcKuFAADUzyFLmKsE33oa+Wc5Do7kb67vbnypQTLxUP06sElniLFiaXGQjavNUPiKVLDmRoWaYwSDwCazxCY4ZwD2sI6poBgm0h08fpgm51DuSFmrZDMgbYZsE0vWiEn41FvEWPE0/tCMSayGAMn41Fw7DNJyQspQa2NqTCOyb9ywtklXsxs//76HWpNkIUDFTFO5OI8BSsBAfwichMPgEjA0GAdWtbZRMQQDzt8AZAFDK1KUtBF5Og8BVkao1xoe2/7uswKFxdUihMjnrl0s7VLsb+QfCWSm3v1dV6pmiD6GIgZxphQ7VSoMgunVGhiKF2F1qlaTMAUsRZke0Y4vSem3GjELpEeGiJgJhcvIPU+QTIBuaYz2Fy8A6kh3aGqv/KsMSPrETC4Wdh8X1w6nM32qDZGke1QpbguBthOLL4SKbFzvuQDlEkkExIBXS4r9c8vJdsnzQN9P1NTu31BEARBEARBEDz8BxcS0efSUtnIAAAAAElFTkSuQmCC" alt="은공" onerror="this.parentElement.textContent='🥈'"/></div>
+        <div class="medal-label">은공 훈장<small>Silver Merit</small></div>
+        <input class="medal-input" id="cur-silver" type="number" min="0" placeholder="0" oninput="calc()" />
+      </div>
+      <div class="medal-field">
+        <div class="medal-icon gold"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAABQCAYAAACOEfKtAAADkUlEQVR4nO2bL5YiMRDGa/atWrMGjRrR3IBDIFaNWIXgCAiOgJgjIFArUCvmENxgECg0Zk/AinlF56Xzt1OVFLz6GWbo6U7666+SSnUGQFGUB+aldQc2vyY3iuts/16b3Mu3Fo0+E99bd6CnG3neibQXuagDC1EBC1EBC1EBC1EBCxE0C7edTceiDixEkAOHrH5P7j/v/lwb9sSPSAFN4ezvpAmpIVyIOAFd7ss5XhtxAj4azctZNudDFy1vvb6dxPRbnANj4kgSD0CggI+GyDQGAGCxvgy++3ifNuhJGFHhgOOfSzzk430qKozFdOR86G4h4UzQiRKEbN6BFNf5kODGpo3nuM5Hazc2abTEdT5aubF6gxSu89FCxKqNcYqH1A7pKo24Qna/6YsCy62/RLXfTKLHXdep5Ub2BmzXmTdsYwqAf7fcXmC/mXqPh65Tw41sK5GSieLLdf15+PN+Mw260QbbPh+6G5eILBf1jXUh15iY4g2vkbacs4XmciNpMeF86G6lE0VIvJTjPhbrCyzWl6RyWQ6jQtjsBD7RGjMsBSii6UTX/aSSbWffE0wVLzz4pz+AUCinjJOhyk6OiFkhTG3/loQeeM59iqgHhpz3eVzBbL7znmM7MWeWpqCqgHZ6EuPzuIJ/p5NXRICh+LmpTikkY2Bs/DOT4lRQvJ9dd//0iThsb5h4u/CNg2xjYO7FAXrXjRUPAO4ifh5XSedjeyl5p30/ufc3KoR9KQAFtniIKWKqE0OYa+WS5Lo4kX59O72EUoLl9pq8evCJh+Q4sdZYKOa1Zkw8JDecuRGRxqB4AHD/jEEZziWQLaxTCgiuicQUbwyu2TmWG1LWCtkc6JoB+/SiF3I2340WMUU8sy8cY6KIMXA230XHPpucvJAT0toYhnFK/lUSzj7xUmb7yeQHaU1QhAORFCdKcR4iSkCAsIjSxANgEjA2WMeWdS4RKcSjDl8AYgFjq5IcTBElOg9hS2PQha73tl/LrHhxAVOcFPHspZurXY79hewrkdLca6zzatUEycdAyjCmhGunQpNZOKdCk0LtKrRJ02ICpYitYNszIuk9MedGI3GJ9KOhAhby9AJy7xNkE1BqOkPN0zuQG9YdquYrzxYzshkBDzcL2++La4ez3R7Xxii2Haoc16WA2onVVyI1ds7XfIA6iRTCIqDPZbX++aVm+6x5YOh3blq3ryiKoiiKoihKgP8VZd9wE3FcpgAAAABJRU5ErkJggg==" alt="금공" onerror="this.parentElement.textContent='🥇'"/></div>
+        <div class="medal-label">금공 훈장<small>Gold Merit</small></div>
+        <input class="medal-input" id="cur-gold" type="number" min="0" placeholder="0" oninput="calc()" />
+      </div>
+      <div class="medal-field">
+        <div class="medal-icon plat"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAABQCAYAAACOEfKtAAADkklEQVR4nO2bL3YbMRDGJ30tKQ4KCO4RDEocUJOAktzAxiEBRgVFBiHB9g1CCkxcYJMCH6E4wJcocEHe2Hpa/V3NSLN+8yN2stmV9ttPo9GsAqAoyoC5at2B2+8/jxTXefv1o8m9fGjR6CXxsXUHznzped5f0l7kog4sRAUsRAUsRAUsRAUsRNAs3HY27Ys6sBBBDuzybTo9ff+9WjXsiR+RAprC2b+TJqQO4ULECehyX87x2ogTcGg0L2fZTNeHaHlrdX8jpt/iHBgTR5J4AAIFHBoi0xgAgNenWed3D8/LBj0JI2o4YPxziYc8PC9FDWMxHZmuD8eQcCboRAlCNu9Aiut8SHBj08ZzXOejtRubNFriOh+t3Fi9QQrX+WghYtXGOMVDag/pKo24hux4/nL6vls8es8dz1+ix13XqeVG9gZs15k3bGMKgH+3W8xgPF96j4euU8ONbCuRkoni3XXn8/D7eL4MutEG256uD0cuEVku6ot1IdeYmOJ1r5G2nLOF5nIjqQMp0pOQeHg8VUQTLjf2EtCs2WFnasywFLw+zToiuu4nlewn4St4pooXDv7pDyDkwpQ4Gars5IiYVQ9MqRYPhdADz7lPEfXAkPM2+y1MRnfec2wn5szSFFQV0E5PYmz2W/jz9s8rIkBX/NxUpxSSGBiLf2ZSnAqK9/X20+nTJ2K3vW7i7cIXB9liYO7FAc6u6yseAJxE3Oy3Sedjeyl5p30/uffXawj7UgAKbPEQU8RUJ4Yw18oleWHxW7nV/c1VKCXYLR6TE1+feEiOE2vFQjGvNWPiIbnDmRsRaQyKBwCnzxiUw7kEsjVhSgHBNZGY4vXBNTvHckPKWiGbA10z4Dm9OAs5Gd31FjFFPLMvHDFRRAycjO6isc8mJy/khLQ2hsM4Jf8qGc4+8VJm++vrz6Q1QREORFKcKMV5iCgBAcIiShMPgEnAWLCOLetcIlKIRz18AYgFjK1KcjBFlOg8hC2NQRe63tu+L7PixQVMcVLEs5durnY59heyr0RKc6++zqtVEySPgZTDmBKunQpNZuGcCk0KtavQJk2LCZQitoJtz4ik98ScG43EJdJDQwUs5OIF5N4nyCag1HSGmot3IDesO1TNV54tZmRzBAxuFrbfF9ceznZ7XBuj2HaoclyXAtE7VFOosXO+5gPUSaQQFgF9Lqv1zy8122fNA0M/c9O6fUVRFEVRFEVRAvwHg9vYDHd8cxYAAAAASUVORK5CYII=" alt="백금" onerror="this.parentElement.textContent='💠'"/></div>
+        <div class="medal-label">백금 훈장<small>Platinum Merit</small></div>
+        <input class="medal-input" id="cur-plat" type="number" min="0" placeholder="0" oninput="calc()" />
+      </div>
+    </div>
+  </div>
+
+  <!-- 주간 획득량 -->
+  <div class="card">
+    <div class="card-title">📅 주간 획득량 (매주 버는 훈장)</div>
+    <div class="medal-row">
+      <div class="medal-field">
+        <div class="medal-icon silver"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAABQCAYAAACOEfKtAAADn0lEQVR4nO2brXYbMRCFJz1FJSElJUUBRSYmJnmDgOKaGCSgJqZFBkalJilIQIiLC/wGJiYmRgVGJcV9AhfkaFdHq9/VjDTrMx+xk82utHfvSKNZBUAQhAFzVbsDn798O2Nc59fP71Xu5U2NRi+Jt7U70PKp53m/UXuRijgwExEwExEwExEwExEwE0azcN3ZtC/iwEwYObDL/df75vvzj+eKPXHDUkBdOPN33ISUEM6EnYA296UcLw07AYdG9XKWyXZ3Cpa37m5v2PSbnQND4nASD4ChgEODZRoDADCfTTu/e3zZVOiJH1bhoMY/m3iKx5cNqzBm05Ht7nT2CaejnMhByOodiHGdCw5urNp4iutc1HZjlUZzXOeilhuLN4jhOhc1RCzaGKV4itIhXaQRW8iu1k/N9+XiwXnuav0UPG67Tik3kjdguk6/YRNdAPV3y8UUVuuN87jvOiXcSLYSyZkoXl3Xnqe+r9YbrxtNVNvb3elMJSLJRV1jnc81Orp43WvELedMoanciFpM2O5O59yJwidezHEX89kU5rNpVLkshV4hrHdCPdESMywGSkTdibb7iSXZzq4nGCuef/CPfwC+UI4ZJ32VnRQRk0IY2/418T3wlPtkUQ/0OW9/OMJkPHKeYzoxZZbGoKiAZnoSYn84wp+//5wiAnTFT011ckEZA0Pjn54Ux6LE+/jhuvl0idhtr5t423CNg2RjYOrFAVrX9RUPABoR94dj1PmqvZi807yf1PvrFcKuFAADUzyFLmKsE33oa+Wc5Do7kb67vbnypQTLxUP06sElniLFiaXGQjavNUPiKVLDmRoWaYwSDwCazxCY4ZwD2sI6poBgm0h08fpgm51DuSFmrZDMgbYZsE0vWiEn41FvEWPE0/tCMSayGAMn41Fw7DNJyQspQa2NqTCOyb9ywtklXsxs//76HWpNkIUDFTFO5OI8BSsBAfwichMPgEjA0GAdWtbZRMQQDzt8AZAFDK1KUtBF5Og8BVkao1xoe2/7uswKFxdUihMjnrl0s7VLsb+QfCWSm3v1dV6pmiD6GIgZxphQ7VSoMgunVGhiKF2F1qlaTMAUsRZke0Y4vSem3GjELpEeGiJgJhcvIPU+QTIBuaYz2Fy8A6kh3aGqv/KsMSPrETC4Wdh8X1w6nM32qDZGke1QpbguBthOLL4SKbFzvuQDlEkkExIBXS4r9c8vJdsnzQN9P1NTu31BEARBEARBEDz8BxcS0efSUtnIAAAAAElFTkSuQmCC" alt="은공" onerror="this.parentElement.textContent='🥈'"/></div>
+        <div class="medal-label">은공 훈장 / 주</div>
+        <input class="medal-input" id="wk-silver" type="number" min="0" placeholder="0" oninput="calc()" />
+      </div>
+      <div class="medal-field">
+        <div class="medal-icon gold"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAABQCAYAAACOEfKtAAADkUlEQVR4nO2bL5YiMRDGa/atWrMGjRrR3IBDIFaNWIXgCAiOgJgjIFArUCvmENxgECg0Zk/AinlF56Xzt1OVFLz6GWbo6U7666+SSnUGQFGUB+aldQc2vyY3iuts/16b3Mu3Fo0+E99bd6CnG3neibQXuagDC1EBC1EBC1EBC1EBCxE0C7edTceiDixEkAOHrH5P7j/v/lwb9sSPSAFN4ezvpAmpIVyIOAFd7ss5XhtxAj4azctZNudDFy1vvb6dxPRbnANj4kgSD0CggI+GyDQGAGCxvgy++3ifNuhJGFHhgOOfSzzk430qKozFdOR86G4h4UzQiRKEbN6BFNf5kODGpo3nuM5Hazc2abTEdT5aubF6gxSu89FCxKqNcYqH1A7pKo24Qna/6YsCy62/RLXfTKLHXdep5Ub2BmzXmTdsYwqAf7fcXmC/mXqPh65Tw41sK5GSieLLdf15+PN+Mw260QbbPh+6G5eILBf1jXUh15iY4g2vkbacs4XmciNpMeF86G6lE0VIvJTjPhbrCyzWl6RyWQ6jQtjsBD7RGjMsBSii6UTX/aSSbWffE0wVLzz4pz+AUCinjJOhyk6OiFkhTG3/loQeeM59iqgHhpz3eVzBbL7znmM7MWeWpqCqgHZ6EuPzuIJ/p5NXRICh+LmpTikkY2Bs/DOT4lRQvJ9dd//0iThsb5h4u/CNg2xjYO7FAXrXjRUPAO4ifh5XSedjeyl5p30/ufc3KoR9KQAFtniIKWKqE0OYa+WS5Lo4kX59O72EUoLl9pq8evCJh+Q4sdZYKOa1Zkw8JDecuRGRxqB4AHD/jEEZziWQLaxTCgiuicQUbwyu2TmWG1LWCtkc6JoB+/SiF3I2340WMUU8sy8cY6KIMXA230XHPpucvJAT0toYhnFK/lUSzj7xUmb7yeQHaU1QhAORFCdKcR4iSkCAsIjSxANgEjA2WMeWdS4RKcSjDl8AYgFjq5IcTBElOg9hS2PQha73tl/LrHhxAVOcFPHspZurXY79hewrkdLca6zzatUEycdAyjCmhGunQpNZOKdCk0LtKrRJ02ICpYitYNszIuk9MedGI3GJ9KOhAhby9AJy7xNkE1BqOkPN0zuQG9YdquYrzxYzshkBDzcL2++La4ez3R7Xxii2Haoc16WA2onVVyI1ds7XfIA6iRTCIqDPZbX++aVm+6x5YOh3blq3ryiKoiiKoihKgP8VZd9wE3FcpgAAAABJRU5ErkJggg==" alt="금공" onerror="this.parentElement.textContent='🥇'"/></div>
+        <div class="medal-label">금공 훈장 / 주</div>
+        <input class="medal-input" id="wk-gold" type="number" min="0" placeholder="0" oninput="calc()" />
+      </div>
+      <div class="medal-field">
+        <div class="medal-icon plat"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAABQCAYAAACOEfKtAAADkklEQVR4nO2bL3YbMRDGJ30tKQ4KCO4RDEocUJOAktzAxiEBRgVFBiHB9g1CCkxcYJMCH6E4wJcocEHe2Hpa/V3NSLN+8yN2stmV9ttPo9GsAqAoyoC5at2B2+8/jxTXefv1o8m9fGjR6CXxsXUHznzped5f0l7kog4sRAUsRAUsRAUsRAUsRNAs3HY27Ys6sBBBDuzybTo9ff+9WjXsiR+RAprC2b+TJqQO4ULECehyX87x2ogTcGg0L2fZTNeHaHlrdX8jpt/iHBgTR5J4AAIFHBoi0xgAgNenWed3D8/LBj0JI2o4YPxziYc8PC9FDWMxHZmuD8eQcCboRAlCNu9Aiut8SHBj08ZzXOejtRubNFriOh+t3Fi9QQrX+WghYtXGOMVDag/pKo24hux4/nL6vls8es8dz1+ix13XqeVG9gZs15k3bGMKgH+3W8xgPF96j4euU8ONbCuRkoni3XXn8/D7eL4MutEG256uD0cuEVku6ot1IdeYmOJ1r5G2nLOF5nIjqQMp0pOQeHg8VUQTLjf2EtCs2WFnasywFLw+zToiuu4nlewn4St4pooXDv7pDyDkwpQ4Gars5IiYVQ9MqRYPhdADz7lPEfXAkPM2+y1MRnfec2wn5szSFFQV0E5PYmz2W/jz9s8rIkBX/NxUpxSSGBiLf2ZSnAqK9/X20+nTJ2K3vW7i7cIXB9liYO7FAc6u6yseAJxE3Oy3Sedjeyl5p30/uffXawj7UgAKbPEQU8RUJ4Yw18oleWHxW7nV/c1VKCXYLR6TE1+feEiOE2vFQjGvNWPiIbnDmRsRaQyKBwCnzxiUw7kEsjVhSgHBNZGY4vXBNTvHckPKWiGbA10z4Dm9OAs5Gd31FjFFPLMvHDFRRAycjO6isc8mJy/khLQ2hsM4Jf8qGc4+8VJm++vrz6Q1QREORFKcKMV5iCgBAcIiShMPgEnAWLCOLetcIlKIRz18AYgFjK1KcjBFlOg8hC2NQRe63tu+L7PixQVMcVLEs5durnY59heyr0RKc6++zqtVEySPgZTDmBKunQpNZuGcCk0KtavQJk2LCZQitoJtz4ik98ScG43EJdJDQwUs5OIF5N4nyCag1HSGmot3IDesO1TNV54tZmRzBAxuFrbfF9ceznZ7XBuj2HaoclyXAtE7VFOosXO+5gPUSaQQFgF9Lqv1zy8122fNA0M/c9O6fUVRFEVRFEVRAvwHg9vYDHd8cxYAAAAASUVORK5CYII=" alt="백금" onerror="this.parentElement.textContent='💠'"/></div>
+        <div class="medal-label">백금 훈장 / 주</div>
+        <input class="medal-input" id="wk-plat" type="number" min="0" placeholder="0" oninput="calc()" />
+      </div>
+    </div>
+  </div>
+
+  <!-- 목표 -->
+  <div class="card">
+    <div class="card-title">🎯 목표 훈장</div>
+    <div class="target-row">
+      <select class="target-select" id="target-type" onchange="calc()">
+        <option value="silver">🥈 은공 훈장</option>
+        <option value="gold">🥇 금공 훈장</option>
+        <option value="plat">💠 백금 훈장</option>
+      </select>
+      <div class="target-input-wrap">
+        <input id="target-count" type="number" min="1" placeholder="개수" oninput="calc()" />
+        <span>개</span>
+      </div>
+    </div>
+
+    <!-- 교환 비율 안내 -->
+    <div class="exchange-info" style="margin-top:14px;">
+      <div class="exchange-tag">↑ <span>은공 5</span> → <span>금공 1</span></div>
+      <div class="exchange-tag">↑ <span>금공 5</span> → <span>백금 1</span></div>
+      <div class="exchange-tag">↓ <span>백금 1</span> → <span>금공 2</span></div>
+      <div class="exchange-tag">↓ <span>금공 1</span> → <span>은공 2</span></div>
+    </div>
+
+    <!-- 물질 변환 토글 -->
+    <div class="toggle-row" id="convert-toggle" onclick="toggleConvert()">
+      <div class="toggle-label">
+        <strong>⚗️ 물질 변환 사용</strong>
+        <small id="toggle-desc">OFF — 목표 훈장 타입만 순수 계산</small>
+      </div>
+      <div class="toggle-switch"></div>
+    </div>
+  </div>
+
+  <!-- 결과 -->
+  <div class="result-card hidden" id="result-card">
+    <div class="result-weeks" id="result-weeks">–</div>
+    <div class="result-label" id="result-label"></div>
+    <div class="result-breakdown" id="result-breakdown"></div>
+  </div>
+
+  <!-- 공유 버튼 -->
+  <button class="share-btn" id="share-btn" onclick="shareLink()">
+    🔗 현재 설정 링크 복사
+  </button>
+
+  <p class="notice">훈장은 모두 은공 단위로 환산하여 계산됩니다 (금공=5, 백금=25)</p>
+  <p class="notice" style="margin-top:8px; font-size:0.8rem; opacity:0.5;">파프니르 - 경비 화이팅</p>
+
+</div>
+
+<script>
+  // ── 환산 배율 (은공 기준) ──
+  const RATE = { silver: 1, gold: 5, plat: 25 };
+  let useConvert = false;
+
+  function val(id) {
+    return Math.max(0, parseFloat(document.getElementById(id).value) || 0);
+  }
+
+  function toSilver(s, g, p) {
+    return s * RATE.silver + g * RATE.gold + p * RATE.plat;
+  }
+
+  function toggleConvert() {
+    useConvert = !useConvert;
+    const toggle = document.getElementById('convert-toggle');
+    const desc   = document.getElementById('toggle-desc');
+    if (useConvert) {
+      toggle.classList.add('active');
+      desc.textContent = 'ON — 다른 훈장도 변환해서 합산 계산';
+    } else {
+      toggle.classList.remove('active');
+      desc.textContent = 'OFF — 목표 훈장 타입만 순수 계산';
+    }
+    calc();
+  }
+
+  function calc() {
+    const curS = val('cur-silver'), curG = val('cur-gold'), curP = val('cur-plat');
+    const wkS  = val('wk-silver'),  wkG  = val('wk-gold'),  wkP  = val('wk-plat');
+    const type = document.getElementById('target-type').value;
+    const count = val('target-count');
+
+    const card = document.getElementById('result-card');
+    const weeksEl = document.getElementById('result-weeks');
+    const labelEl = document.getElementById('result-label');
+    const breakdownEl = document.getElementById('result-breakdown');
+
+    if (count <= 0) { card.classList.add('hidden'); return; }
+    card.classList.remove('hidden');
+
+    const typeName  = { silver:'은공', gold:'금공', plat:'백금' }[type];
+    const typeColor = { silver:'silver-c', gold:'gold-c', plat:'plat-c' }[type];
+    const targetVal = count * RATE[type];
+
+    // 물질 변환 ON: 전체 은공 환산 합산 / OFF: 목표 훈장 타입만
+    let curTotal, wkTotal, unitLabel;
+    if (useConvert) {
+      curTotal  = toSilver(curS, curG, curP);
+      wkTotal   = toSilver(wkS, wkG, wkP);
+      unitLabel = '은공 상당';
+    } else {
+      const curMap = { silver: curS, gold: curG, plat: curP };
+      const wkMap  = { silver: wkS,  gold: wkG,  plat: wkP  };
+      curTotal  = curMap[type] * RATE[type];
+      wkTotal   = wkMap[type]  * RATE[type];
+      unitLabel = `${typeName} 기준`;
+    }
+
+    // 부족한 양
+    const need = targetVal - curTotal;
+
+    // breakdown rows
+    let rows = '';
+    if (useConvert) {
+      rows += row('현재 총 보유량 (변환 합산)', `${fmt(curTotal)} 은공 상당`, '');
+    } else {
+      rows += row(`현재 ${typeName} 훈장`, `${fmt(curTotal / RATE[type])}개`, '');
+    }
+    rows += row('목표량', `${typeName} ${fmt(count)}개`, '');
+    rows += '<hr class="breakdown-divider"/>';
+
+    if (need <= 0) {
+      card.className = 'result-card done';
+      weeksEl.className = 'result-weeks done-c';
+      weeksEl.textContent = '✓';
+      labelEl.textContent = '이미 목표를 달성했어요! 🎉';
+      const extra = useConvert ? `${fmt(-need)} 은공 상당 초과` : `${fmt(-need / RATE[type])}개 초과`;
+      rows += row('초과량', `+${extra}`, 'pos');
+    } else if (wkTotal <= 0) {
+      card.className = 'result-card impossible';
+      weeksEl.className = 'result-weeks danger-c';
+      weeksEl.textContent = '∞';
+      labelEl.textContent = useConvert
+        ? '주간 획득량이 0이에요. 입력해주세요!'
+        : `주간 ${typeName} 훈장 획득량이 0이에요!`;
+      rows += row('부족량', useConvert ? `${fmt(need)} 은공 상당` : `${fmt(need / RATE[type])}개`, 'neg');
+    } else {
+      const weeks = Math.ceil(need / wkTotal);
+      card.className = 'result-card';
+      weeksEl.className = `result-weeks ${typeColor}`;
+      weeksEl.textContent = weeks;
+      labelEl.textContent = `주 후면 ${typeName} 훈장 ${fmt(count)}개를 모을 수 있어요`;
+
+      if (useConvert) {
+        rows += row('주간 획득량 (변환 합산)', `${fmt(wkTotal)} 은공 상당`, '');
+        rows += row('부족량', `${fmt(need)} 은공 상당`, 'neg');
+      } else {
+        rows += row(`주간 ${typeName} 훈장 획득`, `${fmt(wkTotal / RATE[type])}개 / 주`, '');
+        rows += row('부족량', `${fmt(need / RATE[type])}개`, 'neg');
+      }
+      rows += '<hr class="breakdown-divider"/>';
+
+      const now = new Date();
+      now.setDate(now.getDate() + weeks * 7);
+      const dateStr = `${now.getFullYear()}년 ${now.getMonth()+1}월 ${now.getDate()}일`;
+      rows += row('예상 달성일', dateStr, 'pos');
+    }
+
+    breakdownEl.innerHTML = rows;
+    updateURL();
+  }
+
+  function row(label, val, cls) {
+    return `<div class="breakdown-row">
+      <span class="bk-label">${label}</span>
+      <span class="bk-val ${cls}">${val}</span>
+    </div>`;
+  }
+
+  function fmt(n) {
+    return n.toLocaleString('ko-KR');
+  }
+
+  // ── URL 공유 ──
+  function getParams() {
+    return new URLSearchParams({
+      cs: document.getElementById('cur-silver').value || '',
+      cg: document.getElementById('cur-gold').value || '',
+      cp: document.getElementById('cur-plat').value || '',
+      ws: document.getElementById('wk-silver').value || '',
+      wg: document.getElementById('wk-gold').value || '',
+      wp: document.getElementById('wk-plat').value || '',
+      tt: document.getElementById('target-type').value,
+      tc: document.getElementById('target-count').value || '',
+      cv: useConvert ? '1' : '0',
+    });
+  }
+
+  function updateURL() {
+    try {
+      history.replaceState(null, '', '?' + getParams().toString());
+    } catch(e) {
+      // 샌드박스 환경(미리보기)에서는 무시
+    }
+  }
+
+  function shareLink() {
+    updateURL();
+    // 직접 열린 경우엔 location.href, 미리보기 iframe이면 params만 복사
+    const base = (location.href.startsWith('http') || location.href.startsWith('file'))
+      ? location.href.split('?')[0]
+      : '';
+    const url = base ? base + '?' + getParams().toString() : '?' + getParams().toString();
+    navigator.clipboard.writeText(url).then(() => {
+      const btn = document.getElementById('share-btn');
+      btn.classList.add('copied');
+      btn.textContent = '✅ 링크가 복사됐어요!';
+      setTimeout(() => {
+        btn.classList.remove('copied');
+        btn.innerHTML = '🔗 현재 설정 링크 복사';
+      }, 2000);
+    }).catch(() => {
+      prompt('아래 링크를 복사하세요:', url);
+    });
+  }
+
+  // ── URL 파라미터 로드 ──
+  (function loadFromURL() {
+    const p = new URLSearchParams(location.search);
+    const set = (id, key) => { if (p.has(key) && p.get(key) !== '') document.getElementById(id).value = p.get(key); };
+    set('cur-silver','cs'); set('cur-gold','cg'); set('cur-plat','cp');
+    set('wk-silver','ws');  set('wk-gold','wg');  set('wk-plat','wp');
+    set('target-count','tc');
+    if (p.has('tt')) document.getElementById('target-type').value = p.get('tt');
+    if (p.get('cv') === '1') toggleConvert();
+    calc();
+  })();
+</script>
+</body>
+</html>
